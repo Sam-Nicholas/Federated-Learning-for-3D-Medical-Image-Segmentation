@@ -1,6 +1,6 @@
 # Federated Learning for Brain Tumour Segmentation
 
-MEng Computer Science with Artificial Intelligence — Final Year Project  
+MEng Computer Science with Artificial Intelligence — Dissertation
 University of Southampton | Samuel Nicholas | April 2025
 
 ---
