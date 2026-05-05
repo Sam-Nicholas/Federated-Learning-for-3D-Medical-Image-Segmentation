@@ -7,7 +7,7 @@ University of Southampton | Samuel Nicholas | April 2025
 
 ## Overview
 
-This project implements federated learning (FL) for glioma segmentation on the [BraTS 2024 Post-Treatment dataset](https://www.synapse.org/Synapse:syn53708249/wiki/), using the [Flower (flwr)](https://flower.ai/) framework. The goal is to simulate a decentralised healthcare network — like a scaled-down version of what you might see across NHS trusts — where hospitals can collaboratively train a shared model without ever sharing their raw patient data.
+This project implements federated learning (FL) for glioma segmentation on the [BraTS 2024 Post-Treatment dataset](https://www.synapse.org/Synapse:syn53708249/wiki/), using the [Flower (flwr)](https://flower.ai/) framework. The goal is to simulate a decentralised healthcare network, like a scaled-down version of what you might see across NHS trusts, where hospitals can collaboratively train a shared model without ever sharing their raw patient data.
 
 Two segmentation architectures are compared (2D U-Net and 3D U-Net), along with two federated aggregation strategies (FedAvg and FedProx). The code is split across three folders, each representing a different experimental configuration.
 
@@ -62,15 +62,15 @@ Each folder is a self-contained implementation. The files are largely similar ac
 
 ### Federated Learning
 
-In standard centralised training, all data goes to one place — which is a non-starter in healthcare due to GDPR and general data governance. Federated learning solves this by keeping patient data local to each institution. Instead of raw data, only model weights are sent to a central server, which aggregates them and distributes the updated global model back to clients.
+In standard centralised training, all data goes to one place, which is a non-starter in healthcare due to GDPR and general data governance. Federated learning solves this by keeping patient data local to each institution. Instead of raw data, only model weights are sent to a central server, which aggregates them and distributes the updated global model back to clients.
 
 This project simulates that setup using Flower's client-server architecture, with each "client" representing a hospital holding its own slice of the BraTS dataset.
 
 ### Aggregation Strategies
 
-**FedAvg** — the standard approach. After local training, the server takes a weighted average of all client model weights. Simple and effective, but can struggle when clients have very different data distributions (non-IID).
+**FedAvg** -> the standard approach. After local training, the server takes a weighted average of all client model weights. Simple and effective, but can struggle when clients have very different data distributions (non-IID).
 
-**FedProx** — extends FedAvg by adding a proximal term to each client's local loss function:
+**FedProx** -> extends FedAvg by adding a proximal term to each client's local loss function:
 
 $$H_k(w; w_t) = F_k(w) + \frac{\mu}{2} \|w - w_t\|^2$$
 
@@ -78,9 +78,9 @@ This penalises local models for drifting too far from the global model, which te
 
 ### Model Architectures
 
-**2D U-Net** — processes individual axial slices from the MRI volumes (4 channels × H × W). Significantly faster and more memory-efficient. Initial filter count set to 64.
+**2D U-Net** -> processes individual axial slices from the MRI volumes (4 channels × H × W). Significantly faster and more memory-efficient. Initial filter count set to 64.
 
-**3D U-Net** — processes full volumetric patches (4 channels × H × W × D), allowing the model to learn inter-slice spatial relationships. Considerably heavier — around 20× slower per sample on CPU.
+**3D U-Net** -> processes full volumetric patches (4 channels × H × W × D), allowing the model to learn inter-slice spatial relationships. Considerably heavier — around 20× slower per sample on CPU.
 
 Both models use a standard encoder-decoder structure with skip connections, and output 4-class segmentation maps (background, oedema, non-enhancing core, enhancing core).
 
@@ -90,16 +90,16 @@ Both models use a standard encoder-decoder structure with skip connections, and 
 
 This project uses the **BraTS 2024 Adult Glioma Post-Treatment** dataset. Each patient case contains four co-registered MRI modalities:
 
-- **T1** — T1-weighted MRI
-- **T1c** — T1-weighted with contrast (highlights active tumour)
-- **T2** — T2-weighted MRI
-- **FLAIR** — highlights oedema/swelling
+- **T1** - T1-weighted MRI
+- **T1c** - T1-weighted with contrast (highlights active tumour)
+- **T2** - T2-weighted MRI
+- **FLAIR** - highlights oedema/swelling
 
 Segmentation labels:
-- `0` — Background
-- `1` — Non-Enhancing Tumour Core
-- `2` — Oedema
-- `4` — Enhancing Tumour
+- `0` - Background
+- `1` - Non-Enhancing Tumour Core
+- `2` - Oedema
+- `4` - Enhancing Tumour
 
 > Note: Label 4 is remapped to class 3 internally during preprocessing to give contiguous indices.
 
@@ -118,7 +118,7 @@ pip install nibabel
 pip install numpy tqdm matplotlib
 ```
 
-Tested with Python 3.10+. GPU (CUDA) is strongly recommended — particularly for the 3D U-Net, which is borderline unusable on CPU for anything beyond very small experiments.
+Tested with Python 3.10+. GPU (CUDA) is strongly recommended, particularly for the 3D U-Net, which is borderline unusable on CPU for anything beyond very small experiments.
 
 ### Data Directory Structure
 
@@ -164,7 +164,7 @@ python main.py --mode client \
     --device cuda
 ```
 
-Repeat with `--client_id 1`, `--client_id 2`, etc. for each additional client. Each client should point to the same data directory — partitioning is handled automatically based on client ID.
+Repeat with `--client_id 1`, `--client_id 2`, etc. for each additional client. Each client should point to the same data directory, partitioning is handled automatically based on client ID.
 
 ### Key Arguments
 
@@ -220,16 +220,16 @@ All experiments were run on CPU on a remote HPC cluster (no GPU access due to qu
 | 2D U-Net | 10 | FedProx | 0.664 |
 | 3D U-Net | 10 | FedAvg | 0.527 |
 
-The 2D U-Net proved far more practical — roughly 20× faster per sample than the 3D model on CPU, and much more resilient to the server instability encountered during longer multi-client runs. FedAvg narrowly edged FedProx on peak Dice in the 10-client setting, though FedProx showed visibly smoother convergence curves.
+The 2D U-Net proved far more practical, roughly 20× faster per sample than the 3D model on CPU, and much more resilient to the server instability encountered during longer multi-client runs. FedAvg narrowly edged FedProx on peak Dice in the 10-client setting, though FedProx showed visibly smoother convergence curves.
 
 ---
 
 ## Known Limitations
 
-- All training was done on CPU — GPU is essentially required for the 3D U-Net to be usable at any real scale
+- All training was done on CPU ude to HPC limits. GPU is essentially required for the 3D U-Net to be usable at any real scale
 - The remote HPC server had a 60-hour job limit, which cut off several 3D U-Net runs before completion
 - Some multi-client runs saw clients disconnect mid-training; checkpointing was used to recover where possible, but it still impacted results
-- FedProx µ was fixed at 0.01 throughout — further tuning could improve its performance
+- FedProx µ was fixed at 0.01 throughout. Further tuning could improve its performance
 - No formal privacy guarantees (e.g. differential privacy) are implemented
 
 ---
